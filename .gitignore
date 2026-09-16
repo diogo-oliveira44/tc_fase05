@@ -1,1 +1,7 @@
 node_modules/
+uploads/
+.env
+.env.*
+!.env.example
+infra/.azure-secrets.env
+infra/containerapp-api.json

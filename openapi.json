@@ -1,0 +1,1518 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Resolve Aí API",
+    "version": "1.0.0",
+    "description": "Incident management API. All dates are UTC ISO 8601 values."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "IncidentId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "AttachmentId": {
+        "in": "path",
+        "name": "attachmentId",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "details",
+              "requestId"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "array",
+                "items": {}
+              },
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "IncidentStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "under_review",
+          "in_progress",
+          "resolved",
+          "cancelled"
+        ]
+      },
+      "IncidentPriority": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
+      },
+      "Incident": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requesterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requesterName": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "assigneeName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "locationDetails": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/IncidentStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/IncidentPriority"
+          },
+          "solution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resolvedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RegisterInput": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "maxLength": 200
+          }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "RefreshTokenInput": {
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateIncidentInput": {
+        "type": "object",
+        "required": [
+          "categoryId",
+          "title",
+          "description",
+          "address"
+        ],
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "minLength": 3
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "locationDetails": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          }
+        }
+      },
+      "CommentInput": {
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "RatingInput": {
+        "type": "object",
+        "required": [
+          "score"
+        ],
+        "properties": {
+          "score": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "PriorityInput": {
+        "type": "object",
+        "required": [
+          "priority",
+          "reason",
+          "version"
+        ],
+        "properties": {
+          "priority": {
+            "$ref": "#/components/schemas/IncidentPriority"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "AssigneeInput": {
+        "type": "object",
+        "required": [
+          "assigneeId",
+          "reason",
+          "version"
+        ],
+        "properties": {
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "TransitionInput": {
+        "type": "object",
+        "required": [
+          "to",
+          "version"
+        ],
+        "properties": {
+          "to": {
+            "$ref": "#/components/schemas/IncidentStatus"
+          },
+          "observation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "solution": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "requester",
+              "manager",
+              "admin"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
+      "HistoryEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "status",
+              "assignment",
+              "priority"
+            ]
+          },
+          "previousValue": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "newValue": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "changedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changedByName": {
+            "type": "string"
+          },
+          "previousLabel": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Assignee name, for entries of type 'assignment'."
+          },
+          "newLabel": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Assignee name, for entries of type 'assignment'."
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          }
+        }
+      },
+      "DashboardSummary": {
+        "type": "object",
+        "properties": {
+          "byStatus": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/IncidentStatus"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "byPriority": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/IncidentPriority"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "averageResolutionSeconds": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "overdue": {
+            "type": "integer",
+            "description": "Incidents in a non-final status past the SLA for their priority."
+          },
+          "ratings": {
+            "type": "object",
+            "properties": {
+              "average": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "distribution": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "slaHours": {
+            "type": "object",
+            "description": "Hours allowed per priority before an incident counts as overdue.",
+            "properties": {
+              "critical": {
+                "type": "integer"
+              },
+              "high": {
+                "type": "integer"
+              },
+              "medium": {
+                "type": "integer"
+              },
+              "low": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "Attachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "incidentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploadedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          "size": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Rating": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "incidentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "ok"
+                    },
+                    "database": {
+                      "const": "up"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "degraded"
+                    },
+                    "database": {
+                      "const": "down"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Requester created"
+          },
+          "409": {
+            "description": "Email exists"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rotated tokens"
+          },
+          "401": {
+            "description": "Invalid refresh token"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Logged out"
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Active categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Category"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "$ref": "#/components/schemas/IncidentStatus"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "schema": {
+              "$ref": "#/components/schemas/IncidentPriority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "categoryId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "assigneeId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdFrom",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdTo",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "-createdAt",
+                "priority",
+                "-priority"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated incidents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Incident"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid filter"
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIncidentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Incident created"
+          },
+          "403": {
+            "description": "Requester role required"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/incidents/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Incident",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Incident"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not visible"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/history": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Chronological audit history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/HistoryEntry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Incident not found"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/comments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Comments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Comment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Incident not found"
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment created"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/attachments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "post": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-File-Name",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Attachment uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attachment"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Too large"
+          },
+          "415": {
+            "description": "Invalid image"
+          }
+        }
+      },
+      "get": {
+        "summary": "List the images attached to an incident",
+        "responses": {
+          "200": {
+            "description": "Attachments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Attachment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Incident not found or not visible"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/attachments/{attachmentId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        },
+        {
+          "$ref": "#/components/parameters/AttachmentId"
+        }
+      ],
+      "get": {
+        "summary": "Download the attachment bytes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The image, served inline",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Attachment not found"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/rating": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatingInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rating created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rating"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Invalid state or duplicate"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      },
+      "get": {
+        "summary": "Read the rating left for a resolved incident",
+        "responses": {
+          "200": {
+            "description": "Rating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rating"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Incident has not been rated"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/priority": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriorityInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Priority changed"
+          },
+          "409": {
+            "description": "Version conflict or unchanged priority"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/assignee": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssigneeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignee changed"
+          },
+          "409": {
+            "description": "Version conflict or unchanged assignee"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/incidents/{id}/transitions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status changed"
+          },
+          "409": {
+            "description": "Invalid transition or version conflict"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "createdFrom",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdTo",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Manager dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummary"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Manager role required"
+          },
+          "422": {
+            "description": "Invalid date filter"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List active users (manager or admin only)",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "requester",
+                "manager",
+                "admin"
+              ]
+            },
+            "description": "Filter by profile; use 'manager' to find eligible assignees."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Manager access is required"
+          }
+        }
+      }
+    },
+    "/users/managers": {
+      "post": {
+        "summary": "Create a manager (admin only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Manager created; returns id, name, email, role and createdAt without credentials"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "422": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    }
+  }
+}
