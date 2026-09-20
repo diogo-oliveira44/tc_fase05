@@ -1,4 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
+import type { Pool } from "pg";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import pool from "./pool.ts";
@@ -7,11 +8,12 @@ const migrationsDirectory = fileURLToPath(
   new URL("./migrations", import.meta.url),
 );
 
-export async function migrate(): Promise<void> {
-  const client = await pool.connect();
+export async function migrate(target: Pool = pool): Promise<void> {
+  const client = await target.connect();
 
   try {
-    await client.query("SELECT pg_advisory_lock($1)", [73_510_505]);
+    // Isso evita de executar a mesma migrate 2 vezes. Basicamente como um orm
+    // acompanha o que já foi executado
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         name text PRIMARY KEY,
@@ -19,6 +21,9 @@ export async function migrate(): Promise<void> {
       )
     `);
 
+    // Cuidado aqui. As migrates precisam seguir a nomenclaura (0001_banan.sql)
+    // caso contrário vai ter problemas de criar uma chave de uma coluna que 
+    // não existe, por exemplo
     const files = (await readdir(migrationsDirectory))
       .filter((file) => file.endsWith(".sql"))
       .sort();
@@ -45,7 +50,6 @@ export async function migrate(): Promise<void> {
       }
     }
   } finally {
-    await client.query("SELECT pg_advisory_unlock($1)", [73_510_505]);
     client.release();
   }
 }

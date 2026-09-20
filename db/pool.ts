@@ -7,12 +7,19 @@ export function createPool(env = process.env) {
   if (env.NODE_ENV === "production")
     database = env.POSTGRES_PROD_DB || "tc_db_prod";
 
+  const secure = env.POSTGRES_SSL === "true" || env.PGSSLMODE === "require";
+
   return new Pool({
     user: env.POSTGRES_USER || "postgres",
     password: env.POSTGRES_PASSWORD || "postgres",
     database,
     host: env.POSTGRES_HOST || "db",
     port: Number(env.POSTGRES_PORT || 5432),
+    ssl: secure
+      ? { rejectUnauthorized: env.POSTGRES_SSL_REJECT_UNAUTHORIZED !== "false" }
+      : undefined,
+    max: Number(env.POSTGRES_POOL_MAX || 10),
+    connectionTimeoutMillis: 10_000,
   });
 }
 
