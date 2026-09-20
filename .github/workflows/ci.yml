@@ -1,0 +1,64 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: typecheck, contract and test# s
+    runs-on: [self-hosted, linux, x64] # running on my vps
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      NODE_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_TEST_DB: tc_db_test
+      POSTGRES_ADMIN_DB: postgres
+      JWT_SECRET: continuous-integration-secret-key
+      UPLOAD_DIRECTORY: uploads
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Formatting
+        run: bunx prettier --check src db spec
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: OpenAPI contract
+        run: bun run openapi:validate
+
+      - name: Tests
+        run: bun test
+
+  image:
+    name: production image
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the API image
+        run: docker build -t resolveai-api:${{ github.sha }} .
