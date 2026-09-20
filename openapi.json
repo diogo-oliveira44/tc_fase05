@@ -762,9 +762,6 @@
           },
           "422": {
             "description": "Invalid input"
-          },
-          "429": {
-            "description": "Too many attempts; see the Retry-After header"
           }
         }
       }
@@ -788,9 +785,6 @@
           },
           "401": {
             "description": "Invalid credentials"
-          },
-          "429": {
-            "description": "Too many attempts; see the Retry-After header"
           }
         }
       }

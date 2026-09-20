@@ -1,5 +1,3 @@
-export default createPool();
-
 import { describe, expect, it } from "bun:test";
 import { createPool } from "../../db/pool.ts";
 
@@ -14,7 +12,7 @@ describe("Pool", () => {
     expect(pool.options.port).toBe(5432);
   });
 
-  it("uses configured values", () => {
+  it("uses informed values", () => {
     const pool = createPool({
       NODE_ENV: "test",
       POSTGRES_USER: "test_user",
@@ -39,5 +37,26 @@ describe("Pool", () => {
     expect(createPool({ NODE_ENV: "production" }).options.database).toBe(
       "tc_db_prod",
     );
+  });
+});
+
+describe("Pool TLS", () => {
+  it("stays plaintext by default", () => {
+    expect(createPool({}).options.ssl).toBeUndefined();
+  });
+
+  it("negotiates TLS when the managed database requires it", () => {
+    expect(createPool({ POSTGRES_SSL: "true" }).options.ssl).toEqual({
+      rejectUnauthorized: true,
+    });
+  });
+
+  it("allows opting out of certificate verification", () => {
+    expect(
+      createPool({
+        POSTGRES_SSL: "true",
+        POSTGRES_SSL_REJECT_UNAUTHORIZED: "false",
+      }).options.ssl,
+    ).toEqual({ rejectUnauthorized: false });
   });
 });

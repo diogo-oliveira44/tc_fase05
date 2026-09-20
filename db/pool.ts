@@ -2,12 +2,15 @@ import { Pool } from "pg";
 
 export function createPool(env = process.env) {
   let database = env.POSTGRES_DB || "tc_db_dev";
+  const secure = env.POSTGRES_SSL === "true";
 
-  if (env.NODE_ENV === "test") database = env.POSTGRES_TEST_DB || "tc_db_test";
-  if (env.NODE_ENV === "production")
-    database = env.POSTGRES_PROD_DB || "tc_db_prod";
-
-  const secure = env.POSTGRES_SSL === "true" || env.PGSSLMODE === "require";
+  switch (env.NODE_ENV) {
+    case "test":
+      database = env.POSTGRES_TEST_DB || "tc_db_test";
+      break;
+    case "production":
+      database = env.POSTGRES_PROD_DB || "tc_db_prod";
+  }
 
   return new Pool({
     user: env.POSTGRES_USER || "postgres",

@@ -8,15 +8,17 @@ import {
   it,
 } from "bun:test";
 import type { PoolClient } from "pg";
-import pool from "../../db/pool.ts";
+import { createPool } from "../../db/pool.ts";
 import { migrate } from "../../db/migrate.ts";
 import { ensureTestDatabase } from "./test-database.ts";
 
+// Owns its pool so ending it cannot disturb the other spec files in the run.
+const pool = createPool();
 let client: PoolClient | undefined;
 
 beforeAll(async () => {
   await ensureTestDatabase();
-  await migrate();
+  await migrate(pool);
   client = await pool.connect();
 });
 
