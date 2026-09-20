@@ -7,8 +7,8 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["bun", "node"]
   },
-  "include": ["src/**/*.ts", "db/**/*.ts"],
-  "exclude": ["spec"]
+  "include": ["src/**/*.ts", "db/**/*.ts", "spec/**/*.ts"]
 }

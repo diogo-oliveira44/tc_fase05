@@ -10,7 +10,7 @@ concurrency: deploy-production
 jobs:
   deploy:
     name: Azure Container Apps
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64] # running on my vps
     environment: production
 
     steps:
