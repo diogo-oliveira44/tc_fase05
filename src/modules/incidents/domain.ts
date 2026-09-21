@@ -43,3 +43,17 @@ export function validateTransition(
       "A solution is required to resolve an incident",
     );
 }
+
+/** Coordinates are optional, but must be real ones when present. */
+export function parseCoordinates(latitude: unknown, longitude: unknown) {
+  const lat = latitude == null ? null : Number(latitude);
+  const lon = longitude == null ? null : Number(longitude);
+
+  if (
+    (lat != null && (!Number.isFinite(lat) || lat < -90 || lat > 90)) ||
+    (lon != null && (!Number.isFinite(lon) || lon < -180 || lon > 180))
+  )
+    throw new AppError(422, "VALIDATION_ERROR", "Invalid coordinates");
+
+  return { latitude: lat, longitude: lon };
+}
