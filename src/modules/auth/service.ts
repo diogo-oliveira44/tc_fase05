@@ -7,7 +7,7 @@ import * as repository from "./repository.ts";
 
 export interface Principal {
   id: string;
-  role: "requester" | "manager";
+  role: "requester" | "manager" | "admin";
 }
 
 /** Mints an access token and stores the hash of a fresh refresh token. */
@@ -44,11 +44,12 @@ export async function register(
   name: string,
   email: string,
   password: string,
+  role: "requester" | "manager" = "requester",
 ) {
   const hash = await Bun.password.hash(password, { algorithm: "argon2id" });
 
   try {
-    return await repository.insertUser(pool, name, email, hash);
+    return await repository.insertUser(pool, name, email, hash, role);
   } catch (error: any) {
     if (error?.code === "23505")
       throw new AppError(

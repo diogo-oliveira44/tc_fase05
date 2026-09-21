@@ -397,7 +397,8 @@
             "type": "string",
             "enum": [
               "requester",
-              "manager"
+              "manager",
+              "admin"
             ]
           },
           "createdAt": {
@@ -1440,7 +1441,7 @@
     },
     "/users": {
       "get": {
-        "summary": "List active users (manager only)",
+        "summary": "List active users (manager or admin only)",
         "parameters": [
           {
             "in": "query",
@@ -1449,7 +1450,8 @@
               "type": "string",
               "enum": [
                 "requester",
-                "manager"
+                "manager",
+                "admin"
               ]
             },
             "description": "Filter by profile; use 'manager' to find eligible assignees."
@@ -1476,6 +1478,38 @@
           },
           "403": {
             "description": "Manager access is required"
+          }
+        }
+      }
+    },
+    "/users/managers": {
+      "post": {
+        "summary": "Create a manager (admin only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Manager created; returns id, name, email, role and createdAt without credentials"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "422": {
+            "description": "Invalid input"
           }
         }
       }

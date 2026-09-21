@@ -46,3 +46,11 @@ export const requireManager: RequestHandler = (req, _res, next) => {
 
   next();
 };
+
+export const requireAdmin: RequestHandler = (req, _res, next) => {
+  if (req.auth?.role !== "admin")
+    return next(
+      new AppError(403, "ADMIN_REQUIRED", "Admin access is required"),
+    );
+  next();
+};

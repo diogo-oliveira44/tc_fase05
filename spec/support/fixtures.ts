@@ -19,7 +19,7 @@ export interface Actor {
   name: string;
   email: string;
   password: string;
-  role: "requester" | "manager";
+  role: "requester" | "manager" | "admin";
   accessToken: string;
   refreshToken: string;
 }
@@ -60,7 +60,7 @@ export async function createRequester(
   };
 }
 
-// Managers are never created by the public API — the real system seeds them (db/seed.ts).
+// Insert privileged test accounts directly to keep fixtures independent of account creation.
 export async function createManager(
   overrides: Partial<{ name: string; email: string; password: string }> = {},
 ): Promise<Actor> {
@@ -81,6 +81,31 @@ export async function createManager(
     email,
     password,
     role: "manager",
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+  };
+}
+
+export async function createAdmin(
+  overrides: Partial<{ name: string; email: string; password: string }> = {},
+): Promise<Actor> {
+  const name = overrides.name ?? "Admin de Teste";
+  const email = (overrides.email ?? uniqueEmail("admin")).toLowerCase();
+  const password = overrides.password ?? "admin-password";
+  const hash = await Bun.password.hash(password, { algorithm: "argon2id" });
+
+  const result = await pool.query(
+    "INSERT INTO users(name,email,password_hash,role) VALUES($1,$2,$3,'admin') RETURNING id",
+    [name, email, hash],
+  );
+
+  const session = await login(email, password);
+  return {
+    id: result.rows[0].id,
+    name,
+    email,
+    password,
+    role: "admin",
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
   };

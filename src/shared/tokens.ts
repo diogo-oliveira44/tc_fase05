@@ -48,12 +48,12 @@ export async function verifyAccessToken(token: string, secret: string) {
     throw new Error("invalid token");
   const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as {
     sub: string;
-    role: "requester" | "manager";
+    role: "requester" | "manager" | "admin";
     exp: number;
   };
   if (
     !payload.sub ||
-    !["requester", "manager"].includes(payload.role) ||
+    !["requester", "manager", "admin"].includes(payload.role) ||
     payload.exp <= Date.now() / 1000
   )
     throw new Error("expired token");

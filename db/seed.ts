@@ -1,17 +1,27 @@
 import pool from "./pool.ts";
 
 async function seed() {
-  const email = process.env.MANAGER_EMAIL ?? "manager@resolveai.local";
-  const password = process.env.MANAGER_PASSWORD;
-  if (!password || password.length < 8)
-    throw new Error("MANAGER_PASSWORD with at least 8 characters is required");
-  const hash = await Bun.password.hash(password, { algorithm: "argon2id" });
-  await pool.query(
-    `INSERT INTO users(name,email,password_hash,role) VALUES($1,$2,$3,'manager')
-    ON CONFLICT(email) DO UPDATE SET name=excluded.name,password_hash=excluded.password_hash,role='manager',active=true,updated_at=now()`,
-    [process.env.MANAGER_NAME ?? "Resolve Aí Manager", email, hash],
-  );
-  console.log(`Manager seeded: ${email}`);
+  for (const role of ["manager", "admin"] as const) {
+    const prefix = role.toUpperCase();
+    const password = process.env[`${prefix}_PASSWORD`];
+    if (!password) continue;
+    if (password.length < 8)
+      throw new Error(`${prefix}_PASSWORD must contain at least 8 characters`);
+    const email = (process.env[`${prefix}_EMAIL`] ?? `${role}@resolveai.local`)
+      .trim()
+      .toLowerCase();
+    const name = process.env[`${prefix}_NAME`] ?? `Resolve Aí ${role}`;
+    const hash = await Bun.password.hash(password, { algorithm: "argon2id" });
+    const result = await pool.query(
+      `INSERT INTO users(name,email,password_hash,role) VALUES($1,$2,$3,$4)
+       ON CONFLICT(email) DO UPDATE SET name=excluded.name,password_hash=excluded.password_hash,active=true,updated_at=now()
+       WHERE users.role=excluded.role RETURNING id`,
+      [name, email, hash, role],
+    );
+    if (!result.rowCount)
+      throw new Error(`${prefix}_EMAIL belongs to a different role`);
+    console.log(`${role} seeded: ${email}`);
+  }
 }
 if (import.meta.main)
   seed()

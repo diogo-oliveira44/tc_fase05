@@ -4,7 +4,7 @@ export interface UserRow {
   id: string;
   name: string;
   email: string;
-  role: "requester" | "manager";
+  role: "requester" | "manager" | "admin";
   password_hash: string;
 }
 
@@ -20,11 +20,12 @@ export async function insertUser(
   name: string,
   email: string,
   passwordHash: string,
+  role: "requester" | "manager" = "requester",
 ) {
   const result = await db.query(
-    `INSERT INTO users(name,email,password_hash) VALUES($1,$2,$3)
+    `INSERT INTO users(name,email,password_hash,role) VALUES($1,$2,$3,$4)
      RETURNING id,name,email,role,created_at AS "createdAt"`,
-    [name, email, passwordHash],
+    [name, email, passwordHash, role],
   );
   return result.rows[0];
 }

@@ -16,7 +16,7 @@ import * as repository from "./repository.ts";
 
 export interface Auth {
   userId: string;
-  role: "requester" | "manager";
+  role: "requester" | "manager" | "admin";
 }
 
 /**
@@ -32,6 +32,7 @@ export async function visibleIncident(
 
   if (
     !incident ||
+    auth.role === "admin" ||
     (auth.role === "requester" && incident.requesterId !== auth.userId)
   )
     throw new AppError(404, "INCIDENT_NOT_FOUND", "Incident not found");

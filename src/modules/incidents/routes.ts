@@ -26,88 +26,73 @@ export function createIncidentsRouter(deps: Deps): Router {
   const router = Router();
   const authenticated = authenticate(deps);
 
-  router.post(
-    "/incidents",
-    authenticated,
-    async (req, res) =>
-      res.status(201).json(await service.create(pool, req.auth!, req.body)),
+  router.post("/incidents", authenticated, async (req, res) =>
+    res.status(201).json(await service.create(pool, req.auth!, req.body)),
   );
 
-  router.get(
-    "/incidents",
-    authenticated,
-    async (req, res) => {
-      const page = Math.max(
-        1,
-        Number.parseInt(String(req.query.page ?? "1")) || 1,
-      );
-      const pageSize = Math.min(
-        100,
-        Math.max(1, Number.parseInt(String(req.query.pageSize ?? "20")) || 20),
-      );
-      const filters = {
-        // A requester never sees anyone else's incidents, whatever they filter by.
-        requesterId:
-          req.auth!.role === "requester" ? req.auth!.userId : undefined,
-        status: req.query.status
-          ? oneOf(req.query.status, statuses, "status")
-          : undefined,
-        priority: req.query.priority
-          ? oneOf(req.query.priority, priorities, "priority")
-          : undefined,
-        categoryId: req.query.categoryId
-          ? uuid(req.query.categoryId, "categoryId")
-          : undefined,
-        assigneeId: req.query.assigneeId
-          ? uuid(req.query.assigneeId, "assigneeId")
-          : undefined,
-        createdFrom: req.query.createdFrom
-          ? string(req.query.createdFrom, "createdFrom")
-          : undefined,
-        createdTo: req.query.createdTo
-          ? string(req.query.createdTo, "createdTo")
-          : undefined,
-      };
+  router.get("/incidents", authenticated, async (req, res) => {
+    const page = Math.max(
+      1,
+      Number.parseInt(String(req.query.page ?? "1")) || 1,
+    );
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(String(req.query.pageSize ?? "20")) || 20),
+    );
+    const filters = {
+      // A requester never sees anyone else's incidents, whatever they filter by.
+      requesterId: req.auth!.role === "manager" ? undefined : req.auth!.userId,
+      status: req.query.status
+        ? oneOf(req.query.status, statuses, "status")
+        : undefined,
+      priority: req.query.priority
+        ? oneOf(req.query.priority, priorities, "priority")
+        : undefined,
+      categoryId: req.query.categoryId
+        ? uuid(req.query.categoryId, "categoryId")
+        : undefined,
+      assigneeId: req.query.assigneeId
+        ? uuid(req.query.assigneeId, "assigneeId")
+        : undefined,
+      createdFrom: req.query.createdFrom
+        ? string(req.query.createdFrom, "createdFrom")
+        : undefined,
+      createdTo: req.query.createdTo
+        ? string(req.query.createdTo, "createdTo")
+        : undefined,
+    };
 
-      const { rows, total } = await repository.list(
-        pool,
-        filters,
-        req.query.sort as string | undefined,
+    const { rows, total } = await repository.list(
+      pool,
+      filters,
+      req.query.sort as string | undefined,
+      page,
+      pageSize,
+    );
+
+    res.json({
+      data: rows,
+      meta: {
         page,
         pageSize,
-      );
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  });
 
-      res.json({
-        data: rows,
-        meta: {
-          page,
-          pageSize,
-          total,
-          totalPages: Math.ceil(total / pageSize),
-        },
-      });
-    },
+  router.get("/incidents/:id", authenticated, async (req, res) =>
+    res.json(await service.visibleIncident(pool, req.params.id, req.auth!)),
   );
 
-  router.get(
-    "/incidents/:id",
-    authenticated,
-    async (req, res) =>
-      res.json(await service.visibleIncident(pool, req.params.id, req.auth!)),
-  );
-
-  router.get(
-    "/incidents/:id/history",
-    authenticated,
-    async (req, res) => {
-      const incident = await service.visibleIncident(
-        pool,
-        req.params.id,
-        req.auth!,
-      );
-      res.json({ data: await repository.history(pool, incident.id) });
-    },
-  );
+  router.get("/incidents/:id/history", authenticated, async (req, res) => {
+    const incident = await service.visibleIncident(
+      pool,
+      req.params.id,
+      req.auth!,
+    );
+    res.json({ data: await repository.history(pool, incident.id) });
+  });
 
   router.patch(
     "/incidents/:id/priority",
