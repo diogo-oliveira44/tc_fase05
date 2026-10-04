@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# This scripts execs our migrations and start the server when the container is created
 set -eu
 
 echo '{"event":"startup","step":"migrate"}'

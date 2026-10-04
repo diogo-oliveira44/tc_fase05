@@ -1,50 +1,132 @@
-# Resolvi Aí
+# Resolve Aí
 
-API de gestão de ocorrências do Hackathon FSDT — Fase 5.
+Plataforma de gestão de ocorrências — Hackathon FSDT, Fase 5.
+Este projeto contém somente o **Backend**. Caso queira mais detalhes do painel. Acesse o projeto neste [link](https://github.com/diogo-oliveira44/tc_fase05_front).
+
+Solicitantes registram problemas (iluminação, vazamento, limpeza, segurança…), acompanham o
+andamento e avaliam a resolução. Gestores priorizam, atribuem responsáveis, conduzem a
+ocorrência pelo ciclo de vida e acompanham indicadores.
+
+Este repositório contém a **API**. O front-end está em
+[`tc_fase05_front`](../tc_fase05_front).
 
 ## Executar com Docker
 
-Crie o arquivo de ambiente e suba os serviços:
-
 ```bash
-cp .env.example .env
+cp .env.example .env     # defina JWT_SECRET, MANAGER_PASSWORD e ADMIN_PASSWORD
 docker compose up --build
 ```
 
-O container da API aguarda o PostgreSQL ficar saudável, aplica as migrations pendentes e inicia na porta `3000`.
+O container aguarda o PostgreSQL ficar saudável, aplica as migrations, cria o gestor inicial
+e sobe na porta `3000`. Para a interface, suba também o `docker compose up` de
+`tc_fase05_front` (porta `3001`).
+
+| | Endereço |
+| --- | --- |
+| Front-end | http://localhost:3001 |
+| API | http://localhost:3000/api/v1 |
+| Swagger | http://localhost:3000/docs |
+| Health check | http://localhost:3000/health |
+
+O gestor é criado por um administrador via API ou pelo seed a partir de `MANAGER_EMAIL` / `MANAGER_PASSWORD`. Contas criadas
+pelo cadastro público são sempre solicitantes.
 
 ## Executar localmente
 
-Requer Bun e PostgreSQL. Instale as dependências:
+Requer Bun e PostgreSQL:
 
 ```bash
-bun install
-```
-
-Configure `.env`, aplique o schema e inicie:
-
-```bash
+docker compose run --rm --no-deps --user root api bun install --frozen-lockfile
 bun run db:migrate
+bun run db:seed
 bun run start
 ```
 
 ## Validar
 
 ```bash
-bun run typecheck
-bun test
+bun run typecheck          # inclui a suíte de testes
+bun run openapi:validate   # o contrato bate com as rotas registradas
+bun test                   # unidade + banco + integração HTTP
 ```
 
-O modelo relacional usa UUIDs, categorias cadastráveis, histórico imutável de status, atribuição e prioridade, além de constraints para responsáveis gestores, resolução e avaliação. O plano completo da API está em [`docs/API_PLAN.md`](docs/API_PLAN.md).
+Sem Bun instalado, use o container:
+
+```bash
+docker compose run --rm api bun test
+docker compose run --rm api bun run typecheck
+```
+
+A suíte sobe a aplicação real numa porta efêmera contra um banco de teste isolado e cobre
+autenticação, permissões por perfil, isolamento entre solicitantes, as seis transições
+válidas, os estados finais, a atomicidade do histórico, o bloqueio otimista, upload de
+imagens e o dashboard. Não depende de nenhum passo manual.
 
 ## API
 
-A API REST usa o prefixo `/api/v1`. O health check está em `/health`, o contrato OpenAPI em `/openapi.json` e a interface interativa em `/docs`.
+Prefixo `/api/v1`. Contrato completo em [`openapi.json`](openapi.json), navegável em `/docs`.
 
-O seed administrativo exige `MANAGER_PASSWORD` e cria ou atualiza o usuário configurado por `MANAGER_EMAIL`. Access tokens duram 15 minutos por padrão; refresh tokens são rotativos e revogáveis.
+| Recurso | Endpoints |
+| --- | --- |
+| Autenticação | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `GET /me` |
+| Apoio | `GET /categories`, `GET /users?role=manager` (gestor) |
+| Ocorrências | `POST /incidents`, `GET /incidents` (filtros, ordenação e paginação), `GET /incidents/{id}` |
+| Acompanhamento | `GET /incidents/{id}/history`, `GET`/`POST /incidents/{id}/comments` |
+| Imagens | `GET`/`POST /incidents/{id}/attachments`, `GET /incidents/{id}/attachments/{attachmentId}` |
+| Avaliação | `GET`/`POST /incidents/{id}/rating` |
+| Gestão | `PATCH /incidents/{id}/priority`, `PATCH /incidents/{id}/assignee`, `POST /incidents/{id}/transitions` |
+| Indicadores | `GET /dashboard/summary` |
 
-Uploads aceitam o corpo binário da imagem (`image/jpeg`, `image/png` ou `image/webp`) e o nome opcional no header `X-File-Name`. Cada ocorrência aceita até cinco imagens de 5 MB, armazenadas no diretório configurado em `UPLOAD_DIRECTORY`.
+Access tokens duram 15 minutos; refresh tokens são rotativos e revogáveis. Uploads aceitam o
+corpo binário (`image/jpeg`, `image/png`, `image/webp`), com o nome no header `X-File-Name`:
+até cinco imagens de 5 MB por ocorrência, com tipo declarado no header `Content-Type` (JPEG, PNG ou WebP).
 
-### update swagger
+Erros seguem sempre `{"error":{"code","message","details","requestId"}}` — o cliente decide
+pelo `code`.
 
-`bun run openapi:validate`
+## Ciclo de vida
+
+```
+aberta → em análise → em atendimento → resolvida
+   └──────────┴───────────────┴──────► cancelada
+```
+
+Apenas essas seis transições são aceitas; `resolvida` e `cancelada` são finais. Cancelar
+exige observação, resolver exige a solução aplicada. Cada mudança grava — na mesma transação —
+status anterior, novo status, data/hora, usuário responsável e observação, numa tabela que é
+append-only no próprio banco.
+
+## Documentação
+
+| | |
+| --- | --- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | componentes, perfis, ciclo de vida, auditoria, concorrência e decisões |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | publicação em Azure Container Apps |
+| [`docs/API_PLAN.md`](docs/API_PLAN.md) | plano original da API |
+| [`docs/api_recipes.md`](docs/api_recipes.md) | exemplos de requisições |
+
+## Deploy
+
+```bash
+az login
+./infra/deploy.sh
+```
+
+Provisiona ACR, PostgreSQL Flexible Server, Azure Files e dois Container Apps, publica as duas
+imagens e roda um smoke test. Detalhes e armadilhas em [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+### Administrador
+
+O papel `admin` gerencia contas e pode criar gestores com
+`POST /api/v1/users/managers`, autenticado com seu bearer token. O corpo contém
+`name`, `email` e `password` (mínimo de 8 caracteres). O endpoint sempre cria
+`manager`, independentemente de qualquer `role` enviado. Cadastro público continua
+criando apenas solicitantes. Administradores podem listar usuários, mas não recebem
+permissões de gestão ou leitura de ocorrências.
+
+Para provisionar o primeiro administrador, configure `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+e, opcionalmente, `ADMIN_NAME` no ambiente. Execute `bun run db:migrate` seguido de
+`bun run db:seed` (no Docker, use `docker compose exec -T api` antes desses comandos).
+Recrie o contêiner após alterar seu arquivo de ambiente. O login usa `/api/v1/auth/login`.
+O seed mantém o suporte às variáveis `MANAGER_*`; contas com outro papel não são
+promovidas automaticamente quando o email já existe.

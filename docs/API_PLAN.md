@@ -152,7 +152,7 @@ Dashboard: totais por status, categoria e prioridade; tempo médio de resoluçã
 ### Padrão de respostas e erros
 
 - Criação: `201`; leitura/alteração: `200`; comandos sem corpo: `204` quando aplicável.
-- Falhas: `400` entrada malformada, `401` não autenticado, `403` sem permissão, `404` inexistente ou invisível ao usuário, `409` conflito/regra de estado, `413` upload grande, `415` tipo inválido, `422` validação semântica, `429` limite excedido.
+- Falhas: `400` entrada malformada, `401` não autenticado, `403` sem permissão, `404` inexistente ou invisível ao usuário, `409` conflito/regra de estado, `413` upload grande, `415` tipo inválido, `422` validação semântica.
 - Envelope de erro: `{ "error": { "code": "INVALID_STATUS_TRANSITION", "message": "...", "details": [], "requestId": "..." } }`.
 - Aplicar controle otimista (`version`) nas ações administrativas para evitar atualizações concorrentes perdidas.
 
@@ -209,7 +209,7 @@ Dashboard: totais por status, categoria e prioridade; tempo médio de resoluçã
 
 ### Marco 7 — Endurecimento e entrega
 
-- Adicionar rate limiting, CORS configurável para o domínio do frontend, headers de segurança e limites de payload.
+- Adicionar CORS configurável para o domínio do frontend, headers de segurança e limites de payload.
 - Garantir que logs não contenham senha, token ou conteúdo sensível.
 - Completar testes unitários e de integração, cobertura das jornadas e CI com lint, typecheck, migrations e testes.
 - Gerar imagem Docker imutável, executar migrations no deploy, configurar health/readiness e publicar em cloud.
@@ -220,7 +220,7 @@ Dashboard: totais por status, categoria e prioridade; tempo médio de resoluçã
 - **Unidade:** máquina de estados, políticas de autorização, avaliação, solução e validações.
 - **Integração:** rotas com PostgreSQL e storage isolados; cada teste limpa ou transaciona seus dados.
 - **Contrato:** validar respostas contra OpenAPI e manter exemplos executáveis.
-- **Segurança:** acesso cruzado entre solicitantes, elevação de perfil, token revogado, upload disfarçado, enum/UUID inválidos e rate limit.
+- **Segurança:** acesso cruzado entre solicitantes, elevação de perfil, token revogado, tipo de upload não permitido, enum/UUID inválidos.
 - **Concorrência:** duas mudanças simultâneas na mesma ocorrência; apenas uma versão deve vencer.
 - **Smoke:** health, login do gestor, criação e fluxo completo até avaliação no ambiente de deploy.
 

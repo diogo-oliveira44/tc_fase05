@@ -12,6 +12,7 @@ export const securityHeaders: RequestHandler = (_req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+
   next();
 };
 
@@ -19,12 +20,10 @@ export const cors =
   (config: AppConfig): RequestHandler =>
     (req, res, next) => {
       res.header("Access-Control-Allow-Origin", config.corsOrigin);
-      res.header("Vary", "Origin");
       res.header(
         "Access-Control-Allow-Headers",
         "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-File-Name",
       );
-
       res.header(
         "Access-Control-Allow-Methods",
         "GET, POST, PATCH, PUT, DELETE, OPTIONS",

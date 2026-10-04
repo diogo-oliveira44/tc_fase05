@@ -6,6 +6,7 @@ function integer(
   name: string,
 ): number {
   const parsed = Number(value ?? fallback);
+
   if (!Number.isInteger(parsed) || parsed <= 0)
     throw new Error(`${name} must be a positive integer`);
   return parsed;

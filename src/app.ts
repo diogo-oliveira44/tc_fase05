@@ -4,7 +4,7 @@ import defaultPool from "../db/pool.ts";
 import { loadConfig, type AppConfig } from "./config.ts";
 import { errorHandler, notFound } from "./shared/errors.ts";
 import { cors, securityHeaders, type Deps } from "./shared/http.ts";
-import { requestLogger } from "./shared/observability.ts";
+// import { requestLogger } from "./shared/observability.ts";
 import { createAttachmentsRouter } from "./modules/attachments/routes.ts";
 import { createAuthRouter } from "./modules/auth/routes.ts";
 import { createCategoriesRouter } from "./modules/categories/routes.ts";
@@ -28,7 +28,7 @@ export function createApp(
   const deps: Deps = { pool, config };
   const app = express();
 
-  app.use(requestLogger);
+  // app.use(requestLogger);
   app.use(securityHeaders);
   app.use(cors(config));
   app.use(express.json());
@@ -47,7 +47,8 @@ export function createApp(
     createRatingsRouter(deps),
     createDashboardRouter(deps),
   ])
-  app.use(prefix, router);
+
+    app.use(prefix, router);
   app.use(notFound);
   app.use(errorHandler);
 

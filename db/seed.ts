@@ -1,6 +1,9 @@
 import pool from "./pool.ts";
+import { migrate } from "./migrate.ts";
 
 async function seed() {
+  await migrate();
+
   for (const role of ["manager", "admin"] as const) {
     const prefix = role.toUpperCase();
     const password = process.env[`${prefix}_PASSWORD`];

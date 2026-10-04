@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-// Added to help debug, it can be removed / commented at app.ts
+// Only to help debug
 export const requestLogger: RequestHandler = (req, res, next) => {
   req.requestId = crypto.randomUUID();
   res.setHeader("X-Request-Id", req.requestId);
