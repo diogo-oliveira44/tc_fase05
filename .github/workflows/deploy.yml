@@ -20,11 +20,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Build the API image in the registry
+      # ACR Tasks (az acr build) isn't allowed on this subscription, so build on the runner and push
+      - name: Build and push the API image
         run: |
-          az acr build -r "${{ vars.ACR_NAME }}" \
-            -t "resolveai-api:${{ github.sha }}" \
-            -t "resolveai-api:latest" .
+          az acr login -n "${{ vars.ACR_NAME }}"
+          image="${{ vars.ACR_NAME }}.azurecr.io/resolveai-api"
+          docker build -t "$image:${{ github.sha }}" -t "$image:latest" .
+          docker push "$image:${{ github.sha }}"
+          docker push "$image:latest"
 
       - name: Roll out a new revision
         run: |
