@@ -57,6 +57,16 @@ jobs:
       - name: Tests
         run: bun test
 
+  image:
+    name: production image
+    runs-on: [self-hosted, linux, x64]
+    needs: [test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the API image
+        run: docker build -t resolveai-api:${{ github.sha }} .
+
   deploy:
     name: Azure Container Apps
     runs-on: [self-hosted, linux, x64] # running on my vps
@@ -87,10 +97,3 @@ jobs:
             -g "${{ vars.RESOURCE_GROUP }}" -n resolveai-api \
             --image "${{ vars.ACR_NAME }}.azurecr.io/resolveai-api:${{ github.sha }}"
 
-  image:
-    name: production image
-    runs-on: [self-hosted, linux, x64]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build the API image
-        run: docker build -t resolveai-api:${{ github.sha }} .
