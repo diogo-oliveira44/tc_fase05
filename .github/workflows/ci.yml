@@ -3,6 +3,8 @@ name: ci
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*'
 
 jobs:
   test:
@@ -54,6 +56,36 @@ jobs:
 
       - name: Tests
         run: bun test
+
+  deploy:
+    name: Azure Container Apps
+    runs-on: [self-hosted, linux, x64] # running on my vps
+    needs: [test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ACR Tasks (az acr build) isn't allowed on this subscription
+      # I am buiding in my vps and pushing the image to azure
+      - name: Build and push the API image
+        run: |
+          az acr login -n "${{ vars.ACR_NAME }}"
+          image="${{ vars.ACR_NAME }}.azurecr.io/resolveai-api"
+          docker build -t "$image:${{ github.sha }}" -t "$image:latest" .
+          docker push "$image:${{ github.sha }}"
+          docker push "$image:latest"
+
+      - name: Roll out a new revision
+        run: |
+          az containerapp update \
+            -g "${{ vars.RESOURCE_GROUP }}" -n resolveai-api \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/resolveai-api:${{ github.sha }}"
 
   image:
     name: production image
