@@ -47,7 +47,6 @@ export function createApp(
     createRatingsRouter(deps),
     createDashboardRouter(deps),
   ])
-
     app.use(prefix, router);
   app.use(notFound);
   app.use(errorHandler);

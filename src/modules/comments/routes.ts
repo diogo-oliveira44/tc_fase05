@@ -10,29 +10,19 @@ export function createCommentsRouter(deps: Deps): Router {
   const router = Router();
   const authenticated = authenticate(deps);
 
-  router.post(
-    "/incidents/:id/comments",
-    authenticated,
-    async (req, res) => {
-      const incident = await visibleIncident(pool, req.params.id, req.auth!);
-      const body = string(object(req.body).body, "body", 1);
+  router.post("/incidents/:id/comments", authenticated, async (req, res) => {
+    const incident = await visibleIncident(pool, req.params.id, req.auth!);
+    const body = string(object(req.body).body, "body", 1);
 
-      res
-        .status(201)
-        .json(
-          await repository.insert(pool, incident.id, req.auth!.userId, body),
-        );
-    },
-  );
+    res
+      .status(201)
+      .json(await repository.insert(pool, incident.id, req.auth!.userId, body));
+  });
 
-  router.get(
-    "/incidents/:id/comments",
-    authenticated,
-    async (req, res) => {
-      const incident = await visibleIncident(pool, req.params.id, req.auth!);
-      res.json({ data: await repository.listByIncident(pool, incident.id) });
-    },
-  );
+  router.get("/incidents/:id/comments", authenticated, async (req, res) => {
+    const incident = await visibleIncident(pool, req.params.id, req.auth!);
+    res.json({ data: await repository.listByIncident(pool, incident.id) });
+  });
 
   return router;
 }

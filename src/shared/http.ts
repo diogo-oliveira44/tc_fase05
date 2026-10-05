@@ -18,21 +18,21 @@ export const securityHeaders: RequestHandler = (_req, res, next) => {
 
 export const cors =
   (config: AppConfig): RequestHandler =>
-    (req, res, next) => {
-      res.header("Access-Control-Allow-Origin", config.corsOrigin);
-      res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-File-Name",
-      );
-      res.header(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PATCH, PUT, DELETE, OPTIONS",
-      );
+  (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", config.corsOrigin);
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-File-Name",
+    );
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+    );
 
-      if (req.method === "OPTIONS") {
-        res.sendStatus(204);
-        return;
-      }
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
 
-      next();
-    };
+    next();
+  };

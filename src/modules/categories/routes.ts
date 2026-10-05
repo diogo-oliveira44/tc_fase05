@@ -6,11 +6,8 @@ import * as repository from "./repository.ts";
 export function createCategoriesRouter(deps: Deps): Router {
   const router = Router();
 
-  router.get(
-    "/categories",
-    authenticate(deps),
-    async (_req, res) =>
-      res.json({ data: await repository.listActive(deps.pool) }),
+  router.get("/categories", authenticate(deps), async (_req, res) =>
+    res.json({ data: await repository.listActive(deps.pool) }),
   );
 
   return router;

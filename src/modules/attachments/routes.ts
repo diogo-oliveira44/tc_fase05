@@ -35,11 +35,8 @@ export function createAttachmentsRouter(deps: Deps): Router {
     },
   );
 
-  router.get(
-    "/incidents/:id/attachments",
-    authenticated,
-    async (req, res) =>
-      res.json({ data: await service.list(pool, req.params.id, req.auth!) }),
+  router.get("/incidents/:id/attachments", authenticated, async (req, res) =>
+    res.json({ data: await service.list(pool, req.params.id, req.auth!) }),
   );
 
   router.get(

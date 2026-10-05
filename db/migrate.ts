@@ -22,7 +22,7 @@ export async function migrate(target: Pool = pool): Promise<void> {
     `);
 
     // Cuidado aqui. As migrates precisam seguir a nomenclaura (0001_banan.sql)
-    // caso contrário vai ter problemas de criar uma chave de uma coluna que 
+    // caso contrário vai ter problemas de criar uma chave de uma coluna que
     // não existe, por exemplo
     const files = (await readdir(migrationsDirectory))
       .filter((file) => file.endsWith(".sql"))

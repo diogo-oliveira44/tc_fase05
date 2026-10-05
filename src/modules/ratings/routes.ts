@@ -8,20 +8,14 @@ export function createRatingsRouter(deps: Deps): Router {
   const router = Router();
   const authenticated = authenticate(deps);
 
-  router.post(
-    "/incidents/:id/rating",
-    authenticated,
-    async (req, res) =>
-      res
-        .status(201)
-        .json(await service.rate(pool, req.params.id, req.auth!, req.body)),
+  router.post("/incidents/:id/rating", authenticated, async (req, res) =>
+    res
+      .status(201)
+      .json(await service.rate(pool, req.params.id, req.auth!, req.body)),
   );
 
-  router.get(
-    "/incidents/:id/rating",
-    authenticated,
-    async (req, res) =>
-      res.json(await service.find(pool, req.params.id, req.auth!)),
+  router.get("/incidents/:id/rating", authenticated, async (req, res) =>
+    res.json(await service.find(pool, req.params.id, req.auth!)),
   );
 
   return router;

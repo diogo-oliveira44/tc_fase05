@@ -2,7 +2,8 @@ import { Router, type RequestHandler } from "express";
 import type { Deps } from "../../shared/http.ts";
 
 /** Reports the process and the database; mounted both at the root and under the API prefix. */
-export const createHealthHandler = ({ pool }: Deps): RequestHandler =>
+export const createHealthHandler =
+  ({ pool }: Deps): RequestHandler =>
   async (_req, res) => {
     try {
       await pool.query("SELECT 1");
