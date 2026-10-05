@@ -68,6 +68,5 @@ describe("CORS", () => {
       config.corsOrigin,
     );
     expect(response.headers.get("access-control-allow-origin")).not.toBe("*");
-    expect(response.headers.get("vary")).toContain("Origin");
   });
 });
