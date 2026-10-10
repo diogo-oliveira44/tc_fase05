@@ -87,15 +87,7 @@ az login
 
 ### Administrador
 
-O papel `admin` gerencia contas e pode criar gestores com
-`POST /api/v1/users/managers`. O corpo contém `name`, `email` e `password` (mínimo de 8 caracteres).
-O endpoint sempre cria `manager`, independentemente de qualquer `role` enviado. Cadastro público continua
-criando apenas solicitantes. Administradores podem listar usuários, mas não recebem
-permissões de gestão ou leitura de ocorrências.
+O `admin` gerencia contas e pode criar gestores via
+`POST /api/v1/users/managers`.
+O endpoint só registra `manager` role. 
 
-Para provisionar o primeiro administrador, configure `ADMIN_EMAIL`, `ADMIN_PASSWORD`
-e, opcionalmente, `ADMIN_NAME` no ambiente. Execute `bun run db:migrate` seguido de
-`bun run db:seed` (no Docker, use `docker compose exec -T api` antes desses comandos).
-Recrie o contêiner após alterar seu arquivo de ambiente. O login usa `/api/v1/auth/login`.
-O seed mantém o suporte às variáveis `MANAGER_*`; contas com outro papel não são
-promovidas automaticamente quando o email já existe.
